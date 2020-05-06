@@ -1,14 +1,15 @@
 export const BattleStatuses: {[k: string]: ModdedPureEffectData} = {
-    twist: {
+    twisted: {
         noCopy: true,
         onStart(pokemon) {
             const side = pokemon.side;
             var twistName, twistTyping = '', twisted = pokemon.canMegaEvo;
-            var twistMove = pokemon.moveSlots[pokemon.moveSlots.length - 1];
+            const moveSlots = pokemon.moveSlots;
+            var twistMove = moveSlots[moveSlots.length - 1];
             switch (twisted) {
                 case 'L': twistName = 'Left Twist'; break;
                 case 'R': twistName = 'Right Twist'; break;
-                default: pokemon.removeVolatile('twist'); return;
+                default: pokemon.removeVolatile('twisted'); return;
             }
             if (side.sideConditions['twist']) {
                 pokemon.canMegaEvo = null;
@@ -34,7 +35,7 @@ export const BattleStatuses: {[k: string]: ModdedPureEffectData} = {
             }
 		},
         onSwitchOut(pokemon) {
-            pokemon.removeVolatile('twist');
+            pokemon.removeVolatile('twisted');
         },
         onEnd(pokemon) {
 			var twistName;
