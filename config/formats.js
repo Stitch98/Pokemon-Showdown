@@ -807,6 +807,45 @@ const Formats = [
 		ruleset: ['Obtainable', 'Standard NEXT', 'Team Preview'],
 		banlist: ['Uber'],
 	},
+	
+	{
+		name: "[Gen 8] Twisted Pokemon",
+		desc: `You can Twist the Pokemon switching in, changing its type between two predetermined typings.`,
+		threads: [
+			`&bullet; <a href="https://www.smogon.com/forums/threads/pet-mods-submission-thread.3657184/post-8446318">Twisted Pokemon</a>`,
+		],		
+		mod: 'twisted',
+		searchShow: false,
+		debug: true,
+		forcedLevel: 50,
+		teamLength: {
+			validate: [3, 6],
+			battle: 3,
+		},
+		ruleset: ['Dynamax Clause', 'Team Preview'],
+		banlist: ['Moody', 'Power Construct'],
+		minSourceGen: 8,
+		onBegin(){
+			const move = this.dex.getMove('twist');
+			const twistMove = {
+				move: move.name,
+				id: move.id,
+				pp: move.pp,
+				maxpp: move.pp,
+				target: move.target,
+				disabled: false,
+				used: false,
+			};
+			for (const pokemon of this.getAllPokemon()) {
+				pokemon.moveSlots[4] = twistMove;
+				pokemon.baseMoveSlots[4] = twistMove;
+			}
+		},
+		onBeforeSwitchIn(pokemon) {
+			if (pokemon.side.sideConditions['twist']) 
+				pokemon.addVolatile('twist');
+		}
+	},
 
 	// Randomized Metas
 	///////////////////////////////////////////////////////////////////
