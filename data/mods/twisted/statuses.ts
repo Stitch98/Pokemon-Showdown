@@ -13,7 +13,7 @@ export const BattleStatuses: {[k: string]: ModdedPureEffectData} = {
                 else twistedSpecies.types = twistTyping;
             }
             pokemon.formeChange(twistedSpecies);
-			this.add('-start', pokemon, twisted + ' Twist', '[silent]');
+			this.add('-start', pokemon, twisted + '-Twist', '[silent]');
             this.add('-start', pokemon, 'typechange', pokemon.species.types.join('/'), '[silent]');
             const moveSlots = pokemon.moveSlots;
             var twistMove = moveSlots[moveSlots.length - 1];
