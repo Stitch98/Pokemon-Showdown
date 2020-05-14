@@ -3,50 +3,43 @@ export const BattleStatuses: {[k: string]: ModdedPureEffectData} = {
         noCopy: true,
         onStart(pokemon) {
             const side = pokemon.side;
-            var twistName, twistTyping = '', twisted = pokemon.canMegaEvo;
+            const twistedSpecies = this.dex.deepClone(pokemon.species); 
+            var twistName, twistTyping, twisted = pokemon.canMegaEvo;
+            if (pokemon.types.length === 1 && pokemon.types[0] !== '???')
+                twistedSpecies.types = [ getTwistedType(pokemon.types[0], twisted as string) ];
+            else if (pokemon.types.length > 1){
+                twistTyping = [ getTwistedType(pokemon.types[0], twisted as string), getTwistedType(pokemon.types[1], twisted as string) ];
+                if(twistTyping[0] === twistTyping[1]) twistedSpecies.types = [ twistTyping[0] ];
+                else twistedSpecies.types = twistTyping;
+            }
+            pokemon.formeChange(twistedSpecies);
+			this.add('-start', pokemon, twisted + ' Twist', '[silent]');
+            this.add('-start', pokemon, 'typechange', pokemon.species.types.join('/'), '[silent]');
             const moveSlots = pokemon.moveSlots;
             var twistMove = moveSlots[moveSlots.length - 1];
-            switch (twisted) {
-                case 'L': twistName = 'Left Twist'; break;
-                case 'R': twistName = 'Right Twist'; break;
-                default: pokemon.removeVolatile('twisted'); return;
-            }
-            if (side.sideConditions['twist']) {
-                pokemon.canMegaEvo = null;
-                for(const ally of side.pokemon) ally.canMegaEvo = null;
-                twistMove.disabled = true;
-                twistMove.disabledSource = 'Twist';
-                twistTyping += getTwistedType(pokemon.types[0], twisted);
-                if (pokemon.types.length > 1) 
-                    twistTyping += '/' + getTwistedType(pokemon.types[1], twisted);
-                this.add('-start', pokemon, 'typechange', twistTyping, twistName);
-                pokemon.setType(twistTyping);
-                pokemon.addedType = twistTyping;
-                pokemon.knownType = true;
-                side.removeSideCondition('twist');
-            } 
-            
+            twistMove.disabled = true;
+            twistMove.disabledSource = 'Twist';
+            pokemon.canMegaEvo = null;
+            for(const ally of side.pokemon) ally.canMegaEvo = null;
         },
-        onModifyTypePriority: -1,
+        onModifyTypePriority: 1,
 		onModifyType(move, pokemon) {
-			if (pokemon.getTypes().includes(move.type) && move.category !== 'Status' && pokemon.volatiles['twist']) {
-                let t = pokemon.species.types.indexOf(move.type);
+            let t = pokemon.baseSpecies.types.indexOf(move.type);
+			if (t >= 0 && move.category !== 'Status' && pokemon.volatiles['twisted']) {
                 move.type = pokemon.types[t];
             }
 		},
         onSwitchOut(pokemon) {
+            var twistMove = pokemon.moveSlots[pokemon.moveSlots.length - 1];
+            twistMove.disabled = false;
+            twistMove.disabledSource = 'none';
             pokemon.removeVolatile('twisted');
         },
         onEnd(pokemon) {
 			var twistName;
             this.add('-end', pokemon, twistName);
-            this.add('-start', pokemon, 'typechange', pokemon.species.types.join('/'));
-            pokemon.setType(pokemon.species.types.join('/'));
-			pokemon.addedType = pokemon.species.types.join('/');
-			pokemon.knownType = true
-            var twistMove = pokemon.moveSlots[pokemon.moveSlots.length - 1];
-            twistMove.disabled = false;
-            twistMove.disabledSource = 'none';
+            this.add('-start', pokemon, 'typechange', pokemon.baseSpecies.types.join('/'), '[silent]');
+            pokemon.formeChange(pokemon.baseSpecies);
         },
     },
 };

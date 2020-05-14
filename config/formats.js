@@ -839,10 +839,12 @@ const Formats = [
 			for (const pokemon of this.getAllPokemon()) {
 				pokemon.moveSlots[4] = twistMove;
 				pokemon.baseMoveSlots[4] = twistMove;
+				pokemon.canMegaEvo = null;
 			}
 		},
-		onBeforeSwitchIn(pokemon) {
-			if (pokemon.side.sideConditions['twist']) 
+		onSwitchInPriority: 2,
+		onSwitchIn(pokemon) {
+			if (pokemon.canMegaEvo === 'L' || pokemon.canMegaEvo === 'R') 
 				pokemon.addVolatile('twist');
 		}
 	},
