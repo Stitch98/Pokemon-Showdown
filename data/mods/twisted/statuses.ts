@@ -1,26 +1,44 @@
 export const BattleStatuses: {[k: string]: ModdedPureEffectData} = {
     twisted: {
-        noCopy: true,
         onStart(pokemon) {
+            const TwistedType: { [k: string]: { [k: string]: string; }; } = {
+                Grass: { L: 'Rock', R: 'Electric', prefix: 'Sprouting' },
+                Fire: { L: 'Grass', R: 'Fighting', prefix: 'Blazing' },
+                Water: { L: 'Fire', R: 'Poison', prefix: 'Soaking' },
+                Electric: { L: 'Flying', R: 'Ice', prefix: 'Sparkling' },
+                Psychic: { L: 'Dark', R: 'Bug', prefix: 'Mesmerizing' },
+                Ice: { L: 'Psychic', R: 'Electric', prefix: 'Freezing' },
+                Dragon: { L: 'Fairy', R: 'Fire', prefix: 'Roaring' },
+                Dark: { L: 'Ghost', R: 'Fairy', prefix: 'Obscuring' },
+                Fairy: { L: 'Water', R: 'Ground', prefix: 'Twinkling' },
+                Normal: { L: 'Poison', R: 'Ghost', prefix: 'Stomping' },
+                Fighting: { L: 'Steel', R: 'Dark', prefix: 'Blasting' },
+                Flying: { L: 'Rock', R: 'Ground', prefix: 'Swirling' },
+                Poison: { L: 'Bug', R: 'Grass', prefix: 'Polluting' },
+                Ground: { L: 'Fighting', R: 'Ice', prefix: 'Desolating' },
+                Rock: { L: 'Dragon', R: 'Steel', prefix: 'Crumbling' },
+                Bug: { L: 'Water', R: 'Psychic', prefix: 'Infesting' },
+                Ghost: { L: 'Normal', R: 'Flying', prefix: 'Terrifying' },
+                Steel: { L: 'Dragon', R: 'Normal', prefix: 'Piercing' }
+            };
             const side = pokemon.side;
             const twistedSpecies = this.dex.deepClone(pokemon.species); 
-            var twistName, twistTyping, twisted = pokemon.canMegaEvo;
+            const twistlr = pokemon.canMegaEvo; 
+            var twistTyping;
+
+            pokemon.moveSlots.pop();
+            pokemon.canMegaEvo = null;
+            for(const ally of side.pokemon) ally.canMegaEvo = null;
             if (pokemon.types.length === 1 && pokemon.types[0] !== '???')
-                twistedSpecies.types = [ getTwistedType(pokemon.types[0], twisted as string) ];
+                twistedSpecies.types = [ TwistedType[pokemon.types[0] ][ twistlr as string ] ];
             else if (pokemon.types.length > 1){
-                twistTyping = [ getTwistedType(pokemon.types[0], twisted as string), getTwistedType(pokemon.types[1], twisted as string) ];
+                twistTyping = [ TwistedType[ pokemon.types[0] ][ twistlr as string ], TwistedType[ pokemon.types[1] ][ twistlr as string ] ];
                 if(twistTyping[0] === twistTyping[1]) twistedSpecies.types = [ twistTyping[0] ];
                 else twistedSpecies.types = twistTyping;
             }
-            pokemon.formeChange(twistedSpecies);
-			this.add('-start', pokemon, twisted + '-Twist', '[silent]');
+            pokemon.formeChange(twistedSpecies, this.effect, false, pokemon.name + 'twisted ' + twistlr);
+			this.add('-start', pokemon, twistlr + '-Twist', '[silent]');
             this.add('-start', pokemon, 'typechange', pokemon.species.types.join('/'), '[silent]');
-            const moveSlots = pokemon.moveSlots;
-            var twistMove = moveSlots[moveSlots.length - 1];
-            twistMove.disabled = true;
-            twistMove.disabledSource = 'Twist';
-            pokemon.canMegaEvo = null;
-            for(const ally of side.pokemon) ally.canMegaEvo = null;
         },
         onModifyTypePriority: 1,
 		onModifyType(move, pokemon) {
@@ -30,39 +48,27 @@ export const BattleStatuses: {[k: string]: ModdedPureEffectData} = {
             }
 		},
         onSwitchOut(pokemon) {
-            var twistMove = pokemon.moveSlots[pokemon.moveSlots.length - 1];
-            twistMove.disabled = false;
-            twistMove.disabledSource = 'none';
             pokemon.removeVolatile('twisted');
         },
         onEnd(pokemon) {
-			var twistName;
+            var twistName;
+			const move = this.dex.getMove('twist');
+			const twistMove = {
+				move: move.name,
+				id: move.id,
+				pp: move.pp,
+				maxpp: move.pp,
+				target: move.target,
+				disabled: false,
+				used: false,
+			};
+
+            pokemon.moveSlots.push(twistMove);
+            pokemon.baseMoveSlots.push(twistMove);
+            pokemon.canMegaEvo = null;
             this.add('-end', pokemon, twistName);
             this.add('-start', pokemon, 'typechange', pokemon.baseSpecies.types.join('/'), '[silent]');
             pokemon.formeChange(pokemon.baseSpecies);
         },
     },
 };
-
-function getTwistedType(gameType: string, lr: string): string {
-    let TwistedTypes: {[k: string]: {[k:string]: string}} = {
-        Grass: { L: 'Rock', R: 'Electric', prefix: 'Sprouting' },
-        Fire: { L: 'Grass', R: 'Fighting', prefix: 'Blazing' },
-        Water: { L: 'Fire', R: 'Poison', prefix: 'Soaking' },
-        Electric: { L: 'Flying', R: 'Ice', prefix: 'Sparkling' },
-        Psychic: { L: 'Dark', R: 'Bug', prefix: 'Mesmerizing' },
-        Ice: { L: 'Psychic', R: 'Electric', prefix: 'Freezing' },
-        Dragon: { L: 'Fairy', R: 'Fire', prefix: 'Roaring' },
-        Dark: { L: 'Ghost', R: 'Fairy', prefix: 'Obscuring' },
-        Fairy: { L: 'Water', R: 'Ground', prefix: 'Twinkling' },
-        Normal: { L: 'Poison', R: 'Ghost', prefix: 'Stomping' },
-        Fighting: { L: 'Steel', R: 'Dark', prefix: 'Blasting' },
-        Flying: { L: 'Rock', R: 'Ground', prefix: 'Swirling' },
-        Poison: { L: 'Bug', R: 'Grass', prefix: 'Polluting' },
-        Ground: { L: 'Fighting', R: 'Ice', prefix: 'Desolating' },
-        Rock: { L: 'Dragon', R: 'Steel', prefix: 'Crumbling' },
-        Bug: { L: 'Water', R: 'Psychic', prefix: 'Infesting' },
-        Ghost: { L: 'Normal', R: 'Flying', prefix: 'Terrifying' },
-        Steel: { L: 'Dragon', R: 'Normal', prefix: 'Piercing' }
-    }; return TwistedTypes[gameType][lr];
-}
