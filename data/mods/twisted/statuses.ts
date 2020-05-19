@@ -24,27 +24,27 @@ export const BattleStatuses: {[k: string]: ModdedPureEffectData} = {
             const side = pokemon.side;
             const twistedSpecies = this.dex.deepClone(pokemon.species); 
             const twistlr = pokemon.canMegaEvo; 
-            var twistTyping;
+            var twistTyping = null, t;
 
-            pokemon.moveSlots.pop();
-            pokemon.canMegaEvo = null;
-            for(const ally of side.pokemon) ally.canMegaEvo = null;
             if (pokemon.types.length === 1 && pokemon.types[0] !== '???')
                 twistedSpecies.types = [ TwistedType[pokemon.types[0] ][ twistlr as string ] ];
-            else if (pokemon.types.length > 1){
+            else {
                 twistTyping = [ TwistedType[ pokemon.types[0] ][ twistlr as string ], TwistedType[ pokemon.types[1] ][ twistlr as string ] ];
                 if(twistTyping[0] === twistTyping[1]) twistedSpecies.types = [ twistTyping[0] ];
                 else twistedSpecies.types = twistTyping;
             }
+            pokemon.canMegaEvo = null;
+            for(const ally of side.pokemon) ally.canMegaEvo = null;
+            pokemon.moveSlots.pop();
             pokemon.formeChange(twistedSpecies, this.effect, false, pokemon.name + 'twisted ' + twistlr);
 			this.add('-start', pokemon, twistlr + '-Twist', '[silent]');
             this.add('-start', pokemon, 'typechange', pokemon.species.types.join('/'), '[silent]');
         },
-        onModifyTypePriority: 1,
+        onModifyTypePriority: 2,
 		onModifyType(move, pokemon) {
             let t = pokemon.baseSpecies.types.indexOf(move.type);
 			if (t >= 0 && move.category !== 'Status' && pokemon.volatiles['twisted']) {
-                move.type = pokemon.types[t];
+                move.type = (pokemon.types.length === 1) ? pokemon.types[0] : pokemon.types[t];
             }
 		},
         onSwitchOut(pokemon) {
@@ -56,17 +56,16 @@ export const BattleStatuses: {[k: string]: ModdedPureEffectData} = {
 			const twistMove = {
 				move: move.name,
 				id: move.id,
-				pp: move.pp,
-				maxpp: move.pp,
+				pp: 1,
+				maxpp: 1,
 				target: move.target,
 				disabled: false,
 				used: false,
-			};
-
+            };
+            
             pokemon.moveSlots.push(twistMove);
-            pokemon.baseMoveSlots.push(twistMove);
             pokemon.canMegaEvo = null;
-            this.add('-end', pokemon, twistName);
+            this.add('-end', pokemon, 'Twist');
             this.add('-start', pokemon, 'typechange', pokemon.baseSpecies.types.join('/'), '[silent]');
             pokemon.formeChange(pokemon.baseSpecies);
         },

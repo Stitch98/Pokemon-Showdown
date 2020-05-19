@@ -830,8 +830,8 @@ const Formats = [
 			const twistMove = {
 				move: move.name,
 				id: move.id,
-				pp: move.pp,
-				maxpp: move.pp,
+				pp: 1,
+				maxpp: 1,
 				target: move.target,
 				disabled: false,
 				used: false,
@@ -842,7 +842,7 @@ const Formats = [
 				pokemon.canMegaEvo = null;
 			}
 		},
-		onSwitchInPriority: 2,
+		onSwitchInPriority: -1,
 		onSwitchIn(pokemon) {
 			if (pokemon.canMegaEvo === 'L' || pokemon.canMegaEvo === 'R') 
 				pokemon.addVolatile('twisted');
