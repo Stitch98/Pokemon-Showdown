@@ -815,7 +815,6 @@ const Formats = [
 			`&bullet; <a href="https://www.smogon.com/forums/threads/pet-mods-submission-thread.3657184/post-8446318">Twisted Pokemon</a>`,
 		],		
 		mod: 'twisted',
-		searchShow: false,
 		debug: true,
 		forcedLevel: 50,
 		teamLength: {
@@ -842,7 +841,7 @@ const Formats = [
 				pokemon.canMegaEvo = null;
 			}
 		},
-		onSwitchInPriority: -1,
+		onSwitchInPriority: 1,
 		onSwitchIn(pokemon) {
 			if (pokemon.canMegaEvo === 'L' || pokemon.canMegaEvo === 'R') 
 				pokemon.addVolatile('twisted');

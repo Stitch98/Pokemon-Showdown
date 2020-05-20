@@ -38,6 +38,7 @@ export const BattleMovedex: {[k: string]: ModdedMoveData} = {
 		isNonstandard: "Custom",
 		pp: 1,
 		priority: 6,
+		alwaysHit: true,
 		flags: {},
 		onHit(pokemon){
 			const side = pokemon.side;
