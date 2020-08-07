@@ -207,8 +207,8 @@ export const BattleAbilities: {[k: string]: ModdedAbilityData} = {
 		num: 8,
 	},
 	snowcloak: {
-		desc: "If Snow Cloak is active and this Pokemon is not holding Utility Umbrella, this Pokemon cannot gain a major status condition and Rest will fail for it.",
-		shortDesc: "If Snow Cloak is active, this Pokemon cannot be statused and Rest will fail for it.",
+		desc: "If Hail is active and this Pokemon is not holding Utility Umbrella, this Pokemon cannot gain a major status condition and Rest will fail for it.",
+		shortDesc: "If Hail is active, this Pokemon cannot be statused and Rest will fail for it.",
 		onSetStatus(status, target, source, effect) {
 			if (['hail'].includes(target.effectiveWeather())) {
 				if ((effect as Move)?.status) {
