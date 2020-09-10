@@ -206,6 +206,46 @@ export const BattleStatuses: {[k: string]: ModdedPureEffectData} = {
 		},
 		onLockMove: 'recharge',
 	},
+	choicelock: {
+		name: 'choicelock',
+		noCopy: true,
+		onStart(pokemon) {
+			if (!this.activeMove) throw new Error("Battle.activeMove is null");
+			if (!this.activeMove.id || this.activeMove.hasBounced) return false;
+			this.effectData.move = this.activeMove.id;
+		},
+		onBeforeMove(pokemon, target, move) {
+			if (!pokemon.getItem().isChoice) {
+				pokemon.removeVolatile('choicelock');
+				return;
+			}
+			if (
+				!pokemon.ignoringItem() && !pokemon.volatiles['dynamax'] &&
+				move.id !== this.effectData.move && move.id !== 'struggle'
+			) {
+				// Fails unless the Choice item is being ignored, and no PP is lost
+				this.addMove('move', pokemon, move.name);
+				this.attrLastMove('[still]');
+				this.debug("Disabled by Choice item lock");
+				this.add('-fail', pokemon);
+				return false;
+			}
+		},
+		onDisableMove(pokemon) {
+			if (!pokemon.getItem().isChoice || !pokemon.hasMove(this.effectData.move)) {
+				pokemon.removeVolatile('choicelock');
+				return;
+			}
+			if (pokemon.ignoringItem() || pokemon.volatiles['dynamax']) {
+				return;
+			}
+			for (const moveSlot of pokemon.moveSlots) {
+				if (moveSlot.id !== this.effectData.move && moveSlot.id !== 'twist') {
+					pokemon.disableMove(moveSlot.id, false, this.effectData.sourceEffect);
+				}
+			}
+		},
+	},
     twisted: {
         onStart(pokemon) {
             const side = pokemon.side;
@@ -213,11 +253,7 @@ export const BattleStatuses: {[k: string]: ModdedPureEffectData} = {
             const twistlr = pokemon.canMegaEvo; 
 			var twistTyping = null, t;
 			
-			if (pokemon.baseSpecies.num === 493){
-				twistedSpecies.types = [ getTwistedType(pokemon.types[0], twistlr as string ) ];
-			} else if (pokemon.baseSpecies.num === 773){
-				
-			}else if (pokemon.types.length === 1 && pokemon.types[0] !== '???')
+			if (pokemon.types.length === 1 && pokemon.types[0] !== '???')
                 twistedSpecies.types = [ getTwistedType(pokemon.types[0], twistlr as string ) ];
             else {
                 twistTyping = [ getTwistedType(pokemon.types[0], twistlr as string ), getTwistedType( pokemon.types[1], twistlr as string) ];
@@ -226,8 +262,7 @@ export const BattleStatuses: {[k: string]: ModdedPureEffectData} = {
             }
             pokemon.canMegaEvo = null;
             for(const ally of side.pokemon) ally.canMegaEvo = null;
-			pokemon.moveSlots.pop();
-            pokemon.formeChange(twistedSpecies, this.effect, false, pokemon.name + 'twisted ' + twistlr);
+            pokemon.formeChange(twistedSpecies, this.effect, false, pokemon.name + "-Twist-" + twistlr);
 			this.add('-start', pokemon, twistlr + '-Twist', '[silent]');
             this.add('-start', pokemon, 'typechange', pokemon.species.types.join('/'), '[silent]');
 		},
@@ -242,19 +277,7 @@ export const BattleStatuses: {[k: string]: ModdedPureEffectData} = {
             pokemon.removeVolatile('twisted');
         },
         onEnd(pokemon) {
-            var twistName;
-			const move = this.dex.getMove('twist');
-			const twistMove = {
-				move: move.name,
-				id: move.id,
-				pp: 1,
-				maxpp: 1,
-				target: move.target,
-				disabled: false,
-				used: false,
-            };
-            
-            pokemon.moveSlots.push(twistMove);
+			if(pokemon.moveSlots[pokemon.moveSlots.length - 1].id === 'twist') pokemon.moveSlots.pop();
             pokemon.canMegaEvo = null;
             this.add('-end', pokemon, 'Twist');
             this.add('-start', pokemon, 'typechange', pokemon.baseSpecies.types.join('/'), '[silent]');

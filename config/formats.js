@@ -824,28 +824,30 @@ const Formats = [
 		ruleset: ['Dynamax Clause', 'Team Preview'],
 		banlist: ['Moody', 'Power Construct'],
 		minSourceGen: 8,
-		onBegin(){
-			const move = this.dex.getMove('twist');
-			const twistMove = {
-				move: move.name,
-				id: move.id,
-				pp: 1,
-				maxpp: 1,
-				target: move.target,
-				disabled: false,
-				used: false,
-			};
-			for (const pokemon of this.getAllPokemon()) {
+		onSwitchInPriority: 1,
+		onSwitchIn(pokemon) {
+			if (pokemon.canMegaEvo === 'L' || pokemon.canMegaEvo === 'R')
+				pokemon.addVolatile('twisted');
+			else if(pokemon.moveSlots[pokemon.moveSlots.length - 1].id !== 'twist'){
+				const move = this.dex.getMove('twist');
+				const twistMove = {
+					move: move.name,
+					id: move.id,
+					pp: 999,
+					maxpp: 999,
+					target: move.target,
+					disabled: false,
+					used: false,
+				};
 				pokemon.moveSlots.push(twistMove);
 				pokemon.baseMoveSlots.push(twistMove);
 				pokemon.canMegaEvo = null;
 			}
 		},
-		onSwitchInPriority: 1,
-		onSwitchIn(pokemon) {
-			if (pokemon.canMegaEvo === 'L' || pokemon.canMegaEvo === 'R') 
-				pokemon.addVolatile('twisted');
-		}
+		onSwitchOut(pokemon) {
+			if(pokemon.moveSlots[pokemon.moveSlots.length - 1].id === 'twist')
+				pokemon.moveSlots.pop();
+		},
 	},
 
 	// Randomized Metas
